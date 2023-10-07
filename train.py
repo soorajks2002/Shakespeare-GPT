@@ -27,3 +27,19 @@ class dataset(torch.utils.data.Dataset) :
     
     def __getitem__(self, index) :
         return (self.x[index], self.y[index])
+    
+class PostionalEncoding () :
+    def __init__(self, context_length, embedding_size) :
+        div_term = torch.arange(embedding_size)/embedding_size
+        div_term = 1/torch.pow(1e4, div_term)
+        div_term = div_term.view(1, embedding_size)
+        
+        position_matrix = torch.arange(1, context_length+1).view(context_length,1)
+        
+        self.position_embedding = position_matrix*div_term
+        
+        self.position_embedding[:, 0::2] = torch.sin(self.position_embedding[:, 0::2])
+        self.position_embedding[:, 1::2] = torch.cos(self.position_embedding[:, 1::2])
+    
+    def __call__(self) :            
+        return self.position_embedding
