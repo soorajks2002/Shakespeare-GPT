@@ -43,3 +43,16 @@ class PostionalEncoding () :
     
     def __call__(self) :            
         return self.position_embedding
+    
+class AttentionHead(torch.nn.Module) :
+    def __init__(self, context_length, embed_dim, num_heads) :
+        super(AttentionHead, self).__init__()
+        self.attention = torch.nn.MultiheadAttention(embed_dim, num_heads)
+        self.mask = torch.tril(torch.ones(context_length, context_length), diagonal=0)
+        self.mask = self.mask.masked_fill(self.mask==0, float('-inf'))
+        
+    def __call__(self, x) :
+        x = x.permute(1,0,2)
+        out, _ = self.attention(x, x, x, attn_mask=self.mask)
+
+        return out.permute(1,0,2)
