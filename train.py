@@ -8,7 +8,8 @@ n_attn_heads = 5 # embedding_dim should be divisible by n_attn_heads
 n_neurons = 500
 batch_size = 1000
 learning_rate = 1e-3
-epochs = 200
+epochs = 2000
+checkpoint_save_epoch = 200  # saves model checkpoint after every 'checkpoint_save_epoch' epoch
 
 class dataset(torch.utils.data.Dataset) :
     def __init__(self, context_length) :
@@ -16,7 +17,7 @@ class dataset(torch.utils.data.Dataset) :
         uni = list(set(data))
         uni.sort()
 
-        ctoi = {char:i for i, char in enumerate(uni)}
+        self.ctoi = {char:i for i, char in enumerate(uni)}
         self.itoc = {i:char for i, char in enumerate(uni)}
 
         xy = []
@@ -24,7 +25,7 @@ class dataset(torch.utils.data.Dataset) :
         y = []
         
         for i in data :
-            xy.append(ctoi[i])
+            xy.append(self.ctoi[i])
         
         for i in range(len(xy)-context_length) :
             x.append(xy[i:i+context_length])
@@ -128,6 +129,17 @@ for epoch in range(1,epochs+1) :
     loss_mean = (loss_mean/n_batches).item()
     print(f"Epoch : {epoch}\t Loss : {loss_mean}")
     loss_plot.append(round(loss_mean,2))
+    
+    if epoch%checkpoint_save_epoch == 0:
+        checkpoint = {'epoch' : epoch, 
+                      'optimizer' : optimizer.state_dict(),
+                      'model_state_dict' : model.state_dict(),
+                      'token_decoder' : data.itoc,
+                      'char_encoder' : data.ctoi,
+                      'hyperparameters' : [context_length, embedding_dim, n_tokens, n_attn_heads, n_neurons]
+                      }
+        FILE = 'checkpoint.ckt'
+        torch.save(checkpoint, FILE)
     
 plt.plot(loss_plot, [e+1 for e in range(epochs)])
 plt.show()
