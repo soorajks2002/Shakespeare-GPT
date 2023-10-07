@@ -56,3 +56,37 @@ class AttentionHead(torch.nn.Module) :
         out, _ = self.attention(x, x, x, attn_mask=self.mask)
 
         return out.permute(1,0,2)
+    
+class DeocderNN(torch.nn.Module) :
+    def __init__(self, context_length, embedding_dim, n_tokens, n_attn_heads, n_neurons) :
+        super(DeocderNN, self).__init__()
+        
+        self.input_embeddings = torch.nn.Embedding(n_tokens, embedding_dim)
+        self.position_encodings = PostionalEncoding(context_length, embedding_dim)
+        
+        self.attention = AttentionHead(context_length, embedding_dim, n_attn_heads)
+        
+        self.flatten = torch.nn.Flatten()
+        size_inputs = context_length*embedding_dim
+        
+        self.linear = torch.nn.Linear(size_inputs, n_neurons)
+        self.normalize = torch.nn.LayerNorm(n_neurons)
+        self.activation = torch.nn.Tanh()
+        
+        self.output = torch.nn.Linear(n_neurons, n_tokens)
+        
+    def forward(self, x) :
+        x = self.input_embeddings(x)
+        
+        out = self.attention(x+self.position_encodings())
+
+        out = out + x  # Residual connection
+        
+        out = self.flatten(out)
+        out = self.linear(out)
+        out = self.normalize(out)
+        out = self.activation(out)
+        
+        out = self.output(out)
+        
+        return out
