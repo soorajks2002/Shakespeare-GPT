@@ -136,7 +136,12 @@ for epoch in range(1,epochs+1) :
                       'model_state_dict' : model.state_dict(),
                       'token_decoder' : data.itoc,
                       'char_encoder' : data.ctoi,
-                      'hyperparameters' : [context_length, embedding_dim, n_tokens, n_attn_heads, n_neurons]
+                    #   'hyperparameters' : [context_length, embedding_dim, n_tokens, n_attn_heads, n_neurons]
+                      'hyperparameters' : {'context_length' : context_length, 
+                                           'embedding_dim' : embedding_dim, 
+                                           'n_tokens' : n_tokens, 
+                                           'n_attn_heads' : n_attn_heads,
+                                           'n_neurons' : n_neurons}
                       }
         FILE = 'checkpoint.ckt'
         torch.save(checkpoint, FILE)
