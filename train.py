@@ -1,5 +1,14 @@
 import torch
 
+# HYPERPARAMETERS
+context_length = 10
+embedding_dim = 25
+n_attn_heads = 5 # embedding_dim should be divisible by n_attn_heads
+n_neurons = 500
+batch_size = 1000
+learning_rate = 1e-3
+epochs = 5
+
 class dataset(torch.utils.data.Dataset) :
     def __init__(self, context_length) :
         data = open('Shakespeare.txt', 'r').read()[:10000]
@@ -90,3 +99,27 @@ class DeocderNN(torch.nn.Module) :
         out = self.output(out)
         
         return out
+    
+data = dataset(context_length)
+n_tokens = len(data.itoc)
+
+model = DeocderNN(context_length, embedding_dim, n_tokens, n_attn_heads, n_neurons)
+batch_data = torch.utils.data.DataLoader(data, batch_size, shuffle=True)
+
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+n_batches = len(batch_data)
+
+for epoch in range(epochs) : 
+    loss_mean = 0
+    for x,y in batch_data :
+        output = model(x)
+        loss = criterion(output, y)
+        loss_mean += loss
+        
+        loss.backward()
+        
+        optimizer.step()
+        optimizer.zero_grad()
+    print(f"Epoch : {epoch+1}\t Loss : {loss_mean/n_batches}")
