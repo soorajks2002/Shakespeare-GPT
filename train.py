@@ -1,4 +1,5 @@
 import torch
+import matplotlib.pyplot as plt
 
 # HYPERPARAMETERS
 context_length = 10
@@ -7,7 +8,7 @@ n_attn_heads = 5 # embedding_dim should be divisible by n_attn_heads
 n_neurons = 500
 batch_size = 1000
 learning_rate = 1e-3
-epochs = 5
+epochs = 200
 
 class dataset(torch.utils.data.Dataset) :
     def __init__(self, context_length) :
@@ -110,8 +111,9 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 n_batches = len(batch_data)
+loss_plot = []
 
-for epoch in range(epochs) : 
+for epoch in range(1,epochs+1) : 
     loss_mean = 0
     for x,y in batch_data :
         output = model(x)
@@ -122,4 +124,10 @@ for epoch in range(epochs) :
         
         optimizer.step()
         optimizer.zero_grad()
-    print(f"Epoch : {epoch+1}\t Loss : {loss_mean/n_batches}")
+    
+    loss_mean = (loss_mean/n_batches).item()
+    print(f"Epoch : {epoch}\t Loss : {loss_mean}")
+    loss_plot.append(round(loss_mean,2))
+    
+plt.plot(loss_plot, [e+1 for e in range(epochs)])
+plt.show()
